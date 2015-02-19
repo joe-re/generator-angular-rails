@@ -7,9 +7,13 @@ var os = require('os');
 
 describe('angular-rails:app', function () {
   before(function (done) {
+    var deps = [
+        [helpers.createDummyGenerator(), 'angular:controller']
+      ];
     helpers.run(path.join(__dirname, '../app'))
       .inDir(path.join(os.tmpdir(), './temp-test'))
       .withOptions({ 'skip-install': true })
+      .withGenerators(deps)
       .withPrompt({
         someOption: true
       })
@@ -21,7 +25,14 @@ describe('angular-rails:app', function () {
       'bower.json',
       'package.json',
       '.editorconfig',
-      '.jshintrc'
+      '.jshintrc',
+      'gulpfile.coffee',
+      'ngapp/index.html',
+      'ngapp/scripts/app.coffee',
+      'ngapp/styles/main.scss',
+      'ngapp/views/main.html',
+      'ngapp/views/about.html',
+      'ngtest/karma.conf.coffee',
     ]);
   });
 });

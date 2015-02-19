@@ -2,8 +2,9 @@
 var yeoman = require('yeoman-generator');
 var chalk = require('chalk');
 var yosay = require('yosay');
+var BaseGenerator = require('../generator-base');
 
-module.exports = yeoman.generators.Base.extend({
+module.exports = BaseGenerator.extend({
   initializing: function () {
     this.pkg = require('../package.json');
   },
@@ -12,19 +13,16 @@ module.exports = yeoman.generators.Base.extend({
     var done = this.async();
 
     // Have Yeoman greet the user.
-    this.log(yosay(
-      'Welcome to the classy' + chalk.red('AngularRails') + ' generator!'
-    ));
+    this.log(yosay('Welcome to the classy' + chalk.red('AngularRails') + ' generator!'));
 
     var prompts = [{
-      type: 'confirm',
-      name: 'someOption',
-      message: 'Would you like to enable this option?',
-      default: true
+      name: 'appName',
+      message: "What's your apps name?",
+      default: 'ngApp'
     }];
 
     this.prompt(prompts, function (props) {
-      this.someOption = props.someOption;
+      this._appName = props.appName;
 
       done();
     }.bind(this));
@@ -32,25 +30,18 @@ module.exports = yeoman.generators.Base.extend({
 
   writing: {
     app: function () {
-      this.fs.copy(
-        this.templatePath('_package.json'),
-        this.destinationPath('package.json')
-      );
-      this.fs.copy(
-        this.templatePath('_bower.json'),
-        this.destinationPath('bower.json')
-      );
+      this.write('_package.json', 'package.json');
+      this.write('_bower.json', 'bower.json');
+      this.write('gulpfile.coffee', 'gulpfile.coffee');
+      this.write('ngapp', 'ngapp');
+      this.directory('images', 'ngapp/images');
+      this.directory('ngtest', 'ngtest');
     },
 
     projectfiles: function () {
-      this.fs.copy(
-        this.templatePath('editorconfig'),
-        this.destinationPath('.editorconfig')
-      );
-      this.fs.copy(
-        this.templatePath('jshintrc'),
-        this.destinationPath('.jshintrc')
-      );
+      this.write('editorconfig', '.editorconfig');
+      this.write('jshintrc', '.jshintrc');
+      this.write('bowerrc', '.bowerrc');
     }
   },
 
@@ -58,5 +49,8 @@ module.exports = yeoman.generators.Base.extend({
     this.installDependencies({
       skipInstall: this.options['skip-install']
     });
+    // generate default controllers
+    this.composeWith('angular:controller', { args: ['main'] });
+    this.composeWith('angular:controller', { args: ['about'] });
   }
 });

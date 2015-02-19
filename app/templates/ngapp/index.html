@@ -1,0 +1,42 @@
+<!doctype html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="styles/main.css">
+    <!-- inject:css -->
+    <!-- endinject -->
+  </head>
+  <body ng-app="<%= appName %>">
+    <nav class="top-bar" data-topbar role="navigation">
+      <ul class="title-area">
+        <li class="name">
+          <h1><a ng-href="#/">Angular-Rails</a></h1>
+        </li>
+        <li class="toggle-topbar menu-icon"><a href="#/"><span>Menu</span></a></li>
+      </ul>
+
+      <section class="top-bar-section">
+        <ul class="right">
+          <li class="active"><a ng-href="#/">Home</a></li>
+          <li><a ng-href="#/about">About</a></li>
+          <li><a ng-href="#/contact">Contact</a></li>
+        </ul>
+      </section>
+    </nav>
+
+    <div class="container">
+      <div ng-view=""></div>
+    </div>
+
+    <!-- inject:js -->
+    <!-- endinject -->
+
+    <script src="scripts/app.js"></script>
+    <script src="scripts/controller/main.js"></script>
+    <script src="scripts/controller/about.js"></script>
+    </body>
+</html>
+
