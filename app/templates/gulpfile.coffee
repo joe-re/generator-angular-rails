@@ -11,14 +11,14 @@ filter   = require 'gulp-filter'
 cssmin   = require 'gulp-minify-css'
 sass     = require 'gulp-sass'
 server   = require 'browser-sync'
-reload   = server.reload;
-inject  = require 'gulp-inject'
+reload   = server.reload
+inject   = require 'gulp-inject'
 
 knownOptions =
   string: 'env',
   default: { env: process.env.NODE_ENV || 'development' }
 
-gulp.option = minimist(process.argv.slice(2), knownOptions);
+gulp.option = minimist(process.argv.slice(2), knownOptions)
 gulp.isProduction = -> gulp.option.env == 'production'
 
 gulp.path =
@@ -28,34 +28,35 @@ gulp.path =
 gulp.task 'clean', (cb)->
   rimraf(@path.dest, cb)
 
-gulp.task 'html', ->
+gulp.task 'index', ['copy', 'build:bower:js', 'build:bower:css', 'build:bower:other', 'build:sass', 'build:coffee'], ->
   gulp.src "#{@path.app}/index.html"
+    .pipe inject(
+      gulp.src(["#{@path.dest}/lib/**/*.js", "#{@path.dest}/lib/**/*.css"]),
+      { ignorePath: @path.dest }
+    )
     .pipe gulp.dest("#{@path.dest}/")
 
+gulp.task 'copy', ->
   gulp.src "#{@path.app}/views/**/*.html"
     .pipe gulp.dest("#{@path.dest}/views/")
 
-gulp.task 'image', ->
   gulp.src "#{@path.app}/images/*"
     .pipe gulp.dest("#{@path.dest}/images/")
 
-gulp.task 'bower',['html'], ->
-  target = gulp.src "#{@path.dest}/index.html"
-  src = gulp.src(bower(), { base: "#{@path.app}/bower_components"})
-  bowerJs = src.pipe filter('**/*.js')
+gulp.task 'build:bower:js', ->
+  gulp.src(bower(filter: '**/*.js'), { base: "#{@path.app}/bower_components" })
     .pipe _if @isProduction(), uglify({preserveComments:'some'})
     .pipe concat('bower_components.js')
     .pipe gulp.dest("#{@path.dest}/lib")
 
-  bowerCss = src.pipe filter('**/*.css')
+gulp.task 'build:bower:css', ->
+  gulp.src(bower(filter: '**/*.css'), { base: "#{@path.app}/bower_components" })
     .pipe _if @isProduction(), cssmin({keepBreaks:true})
     .pipe concat('bower_components.css')
     .pipe gulp.dest("#{@path.dest}/lib")
 
-  target.pipe inject(bowerJs)
-    .pipe inject(bowerCss)
-    .pipe gulp.dest(@path.dest)
-
+gulp.task 'build:bower:other', ->
+  src = gulp.src(bower(), { base: "#{@path.app}/bower_components" })
   src.pipe filter('**/*.map')
     .pipe flatten()
     .pipe gulp.dest("#{@path.dest}/lib")
@@ -65,34 +66,27 @@ gulp.task 'bower',['html'], ->
     .pipe flatten()
     .pipe gulp.dest("#{@path.dest}/fonts")
 
-gulp.task 'sass', ->
+gulp.task 'build:sass', ->
   gulp.src "#{@path.app}/styles/**/*.scss"
     .pipe sass()
     .pipe _if @isProduction(), cssmin({keepBreaks:true})
     .pipe concat('main.css')
     .pipe gulp.dest("#{@path.dest}/styles")
 
-gulp.task 'coffee', ->
+gulp.task 'build:coffee', ->
   gulp.src "#{@path.app}/**/*.coffee"
     .pipe coffee()
     .pipe gulp.dest("#{@path.dest}/")
-
-gulp.task 'inject', ->
-  # for karma
-  src = gulp.src(bower(), { base: "#{@path.app}/bower_components"}).pipe filter('**/*.js')
-  karmaConf = gulp.src("#{@path.app}/test/karma.conf.coffee").pipe coffee()
-  return karmaConf.pipe(inject(src))
-    .pipe(gulp.dest('public'))
 
 gulp.task 'serve', ->
   server(
     proxy: 'localhost:3000' # specify rails server
     port: '8000'
   )
-  gulp.watch("#{@path.app}/**/*.html", ['copy', reload]);
-  gulp.watch("#{@path.app}/**/*.coffee", ['coffee', reload]);
-  gulp.watch("#{@path.app}/**/*.scss", ['sass', reload]);
+  gulp.watch("#{@path.app}/**/*.html", ['copy', reload])
+  gulp.watch("#{@path.app}/**/*.coffee", ['build:coffee', reload])
+  gulp.watch("#{@path.app}/**/*.scss", ['build:sass', reload])
 
 
 gulp.task 'build', ['clean'], ->
-  gulp.start ['image', 'bower', 'coffee', 'sass']
+  gulp.start ['index']
