@@ -13,6 +13,7 @@ sass     = require 'gulp-sass'
 server   = require 'browser-sync'
 reload   = server.reload
 inject   = require 'gulp-inject'
+rev      = require('gulp-rev')
 
 knownOptions =
   string: 'env',
@@ -31,7 +32,7 @@ gulp.task 'clean', (cb)->
 gulp.task 'index', ['copy', 'build:bower:js', 'build:bower:css', 'build:bower:other', 'build:sass', 'build:coffee'], ->
   gulp.src "#{@path.app}/index.html"
     .pipe inject(
-      gulp.src(["#{@path.dest}/lib/**/*.js", "#{@path.dest}/lib/**/*.css"]),
+      gulp.src(["#{@path.dest}/scripts/**/*.js", "#{@path.dest}/styles/**/*.css"]),
       { ignorePath: @path.dest }
     )
     .pipe gulp.dest("#{@path.dest}/")
@@ -46,20 +47,22 @@ gulp.task 'copy', ->
 gulp.task 'build:bower:js', ->
   gulp.src(bower(filter: '**/*.js'), { base: "#{@path.app}/bower_components" })
     .pipe _if @isProduction(), uglify({preserveComments:'some'})
-    .pipe concat('bower_components.js')
-    .pipe gulp.dest("#{@path.dest}/lib")
+    .pipe concat('_vendor.js')
+    .pipe rev()
+    .pipe gulp.dest("#{@path.dest}/scripts")
 
 gulp.task 'build:bower:css', ->
   gulp.src(bower(filter: '**/*.css'), { base: "#{@path.app}/bower_components" })
     .pipe _if @isProduction(), cssmin({keepBreaks:true})
-    .pipe concat('bower_components.css')
-    .pipe gulp.dest("#{@path.dest}/lib")
+    .pipe concat('_vendor.css')
+    .pipe rev()
+    .pipe gulp.dest("#{@path.dest}/styles")
 
 gulp.task 'build:bower:other', ->
   src = gulp.src(bower(), { base: "#{@path.app}/bower_components" })
   src.pipe filter('**/*.map')
     .pipe flatten()
-    .pipe gulp.dest("#{@path.dest}/lib")
+    .pipe gulp.dest("#{@path.dest}/styles")
 
   # for font-awesome
   src.pipe filter("font-awesome/fonts/*")
@@ -71,12 +74,16 @@ gulp.task 'build:sass', ->
     .pipe sass()
     .pipe _if @isProduction(), cssmin({keepBreaks:true})
     .pipe concat('main.css')
+    .pipe rev()
     .pipe gulp.dest("#{@path.dest}/styles")
 
 gulp.task 'build:coffee', ->
   gulp.src "#{@path.app}/**/*.coffee"
     .pipe coffee()
-    .pipe gulp.dest("#{@path.dest}/")
+    .pipe _if @isProduction(), uglify({preserveComments:'some'})
+    .pipe concat('main.js')
+    .pipe rev()
+    .pipe gulp.dest("#{@path.dest}/scripts")
 
 gulp.task 'serve', ->
   server(
@@ -86,7 +93,6 @@ gulp.task 'serve', ->
   gulp.watch("#{@path.app}/**/*.html", ['copy', reload])
   gulp.watch("#{@path.app}/**/*.coffee", ['build:coffee', reload])
   gulp.watch("#{@path.app}/**/*.scss", ['build:sass', reload])
-
 
 gulp.task 'build', ['clean'], ->
   gulp.start ['index']
