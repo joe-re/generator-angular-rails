@@ -50,7 +50,7 @@ module.exports = BaseGenerator.extend({
       skipInstall: this.options['skip-install']
     });
     // generate default controllers
-    this.composeWith('angular:controller', { args: ['main'] });
-    this.composeWith('angular:controller', { args: ['about'] });
+    this.composeWith('angular:controller', { args: ['main'], options: {'skip-add': true } });
+    this.composeWith('angular:controller', { args: ['about'], options: {'skip-add': true } });
   }
 });
