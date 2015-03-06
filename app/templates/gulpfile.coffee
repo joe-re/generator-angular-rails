@@ -14,6 +14,7 @@ server   = require 'browser-sync'
 reload   = server.reload
 inject   = require 'gulp-inject'
 rev      = require('gulp-rev')
+htmlmin  = require 'gulp-minify-html'
 
 knownOptions =
   string: 'env',
@@ -35,10 +36,12 @@ gulp.task 'index', ['copy', 'build:bower:js', 'build:bower:css', 'build:bower:ot
       gulp.src(["#{@path.dest}/scripts/**/*.js", "#{@path.dest}/styles/**/*.css"]),
       { ignorePath: @path.dest }
     )
+    .pipe _if @isProduction(), htmlmin()
     .pipe gulp.dest("#{@path.dest}/")
 
 gulp.task 'copy', ->
   gulp.src "#{@path.app}/views/**/*.html"
+    .pipe _if @isProduction(), htmlmin()
     .pipe gulp.dest("#{@path.dest}/views/")
 
   gulp.src "#{@path.app}/images/*"
