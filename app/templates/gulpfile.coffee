@@ -13,8 +13,9 @@ sass     = require 'gulp-sass'
 server   = require 'browser-sync'
 reload   = server.reload
 inject   = require 'gulp-inject'
-rev      = require('gulp-rev')
+rev      = require 'gulp-rev'
 htmlmin  = require 'gulp-minify-html'
+karma    = require('karma').server
 
 knownOptions =
   string: 'env',
@@ -26,6 +27,7 @@ gulp.isProduction = -> gulp.option.env == 'production'
 gulp.path =
   app: 'ngapp'
   dest: 'public'
+  test: 'ngtest'
 
 gulp.task 'clean', (cb)->
   rimraf(@path.dest, cb)
@@ -94,8 +96,14 @@ gulp.task 'serve', ->
     port: '8000'
   )
   gulp.watch("#{@path.app}/**/*.html", ['copy', reload])
-  gulp.watch("#{@path.app}/**/*.coffee", ['build:coffee', reload])
+  gulp.watch("#{@path.app}/**/*.coffee", ['build:coffee', 'test', reload])
   gulp.watch("#{@path.app}/**/*.scss", ['build:sass', reload])
 
+gulp.task 'test', (done) ->
+  karma.start(
+    configFile: "#{__dirname}/#{@path.test}/karma.conf.coffee"
+    singleRun: true
+  , done)
+
 gulp.task 'build', ['clean'], ->
-  gulp.start ['index']
+  gulp.start ['test', 'index']
