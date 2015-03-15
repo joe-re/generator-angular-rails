@@ -95,7 +95,8 @@ gulp.task 'serve', ->
     proxy: 'localhost:3000' # specify rails server
     port: '8000'
   )
-  gulp.watch("#{@path.app}/**/*.html", ['copy', reload])
+  gulp.watch("#{@path.app}/index.html", ['index', reload])
+  gulp.watch("#{@path.app}/views/*.html", ['copy', reload])
   gulp.watch("#{@path.app}/**/*.coffee", ['build:coffee', 'test', reload])
   gulp.watch("#{@path.app}/**/*.scss", ['build:sass', reload])
 
